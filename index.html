@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Ball and Square</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: black;
+      perspective: 1000px; /* Adding perspective for 3D effect */
+      overflow: hidden; /* Prevent scrolling */
+    }
+    .controls {
+      margin-bottom: 20px;
+    }
+    button {
+      display: block;
+      margin: 10px;
+      padding: 10px 20px;
+      background-color: transparent;
+      border: 2px solid white;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* Glow effect */
+      transition: transform 0.2s, box-shadow 0.2s;
+      animation: border-glow 8s linear infinite; /* Rotating glowing animation for border */
+    }
+    @keyframes border-glow {
+      0% {
+        border-color: rgba(255, 255, 255, 0.5);
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      }
+      25% {
+        border-color: rgba(0, 0, 255, 1); /* Blue */
+        box-shadow: 0 0 20px rgba(0, 0, 255, 0.7);
+      }
+      50% {
+        border-color: rgba(0, 255, 0, 1); /* Green */
+        box-shadow: 0 0 20px rgba(0, 255, 0, 0.7);
+      }
+      75% {
+        border-color: rgba(255, 0, 0, 1); /* Red */
+        box-shadow: 0 0 20px rgba(255, 0, 0, 0.7);
+      }
+      100% {
+        border-color: rgba(255, 0, 255, 1); /* Pink */
+        box-shadow: 0 0 20px rgba(255, 0, 255, 0.7);
+      }
+    }
+    button:hover {
+      transform: scale(1.1); /* Scale effect on hover */
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.7); /* Enhanced glow on hover */
+    }
+    button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 300%;
+      height: 300%;
+      background-color: rgba(255, 255, 255, 0.5);
+      transition: width 0.3s, height 0.3s, top 0.3s, left 0.3s;
+      border-radius: 50%;
+      z-index: 0;
+      transform: translate(-50%, -50%);
+    }
+    button:hover::before {
+      width: 0;
+      height: 0;
+      top: 50%;
+      left: 50%;
+    }
+    .container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      background-color: rgba(255, 255, 255, 0.1); /* Transparent background with hint of white */
+      border: 2px solid white; /* White outline for square */
+      border-radius: 20px;
+      transform-style: preserve-3d; /* 3D transform style */
+      transform: rotateX(20deg) rotateY(20deg); /* Initial 3D rotation */
+      transition: transform 0.5s;
+      animation: border-glow-square 8s linear infinite; /* Rotating glowing animation for square border */
+    }
+    @keyframes border-glow-square {
+      0% {
+        border-color: rgba(255, 255, 255, 0.5);
+      }
+      25% {
+        border-color: rgba(0, 0, 255, 1); /* Blue */
+      }
+      50% {
+        border-color: rgba(0, 255, 0, 1); /* Green */
+      }
+      75% {
+        border-color: rgba(255, 0, 0, 1); /* Red */
+      }
+      100% {
+        border-color: rgba(255, 0, 255, 1); /* Pink */
+      }
+    }
+    .ball {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: black;
+      border: 2px solid white; /* White outline for ball */
+      border-radius: 50%;
+      transform: translateZ(1px); /* Push the ball forward slightly for 3D effect */
+      transition: width 0.5s, height 0.5s; /* Smooth transition for size change */
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <button id="speedBtn">When hit +1 speed</button>
+    <button id="sizeBtn">When hit +1 ball size</button>
+    <button id="bothBtn">Activate both</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+  <div class="container" id="square"></div>
+  <script>
+    const square = document.getElementById('square');
+    let ball = document.createElement('div');
+    ball.classList.add('ball');
+    square.appendChild(ball);
+
+    let ballX = 0;
+    let ballY = 0;
+    let ballSpeedX = 2;
+    let ballSpeedY = 2;
+    let speedIncrease = false;
+    let sizeIncrease = false;
+
+    document.getElementById('speedBtn').addEventListener('click', () => {
+      speedIncrease = true;
+      sizeIncrease = false;
+    });
+
+    document.getElementById('sizeBtn').addEventListener('click', () => {
+      speedIncrease = false;
+      sizeIncrease = true;
+    });
+
+    document.getElementById('bothBtn').addEventListener('click', () => {
+      speedIncrease = true;
+      sizeIncrease = true;
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', reset);
+
+    function moveBall() {
+      ballX += ballSpeedX;
+      ballY += ballSpeedY;
+
+      if (ballX <= 0 || ballX + ball.offsetWidth >= square.clientWidth) {
+        ballSpeedX = -ballSpeedX;
+        handleHit();
+      }
+      if (ballY <= 0 || ballY + ball.offsetHeight >= square.clientHeight) {
+        ballSpeedY = -ballSpeedY;
+        handleHit();
+      }
+
+      ball.style.left = `${ballX}px`;
+      ball.style.top = `${ballY}px`;
+
+      requestAnimationFrame(moveBall);
+    }
+
+    function handleHit() {
+      if (speedIncrease) {
+        ballSpeedX *= 1.1;
+        ballSpeedY *= 1.1;
+      }
+      if (sizeIncrease) {
+        const currentSize = parseFloat(getComputedStyle(ball).width); // Get current computed size
+        const maxSize = Math.min(square.clientWidth, square.clientHeight) - 10; // Ensure ball doesn't exceed the square
+
+        const newSize = currentSize + 10; // Incremental increase by 10 pixels
+
+        if (newSize <= maxSize) {
+          ball.style.width = `${newSize}px`;
+          ball.style.height = `${newSize}px`;
+          ball.style.borderRadius = `${newSize / 2}px`; // Maintain circular shape
+
+          // Ensure the ball stays within the square bounds after resizing
+          ballX = Math.min(ballX, square.clientWidth - newSize);
+          ballY = Math.min(ballY, square.clientHeight - newSize);
+        }
+      }
+    }
+
+    function reset() {
+      ball.remove();
+      ball = document.createElement('div');
+      ball.classList.add('ball');
+      square.appendChild(ball);
+      ballX = 0;
+      ballY = 0;
+      ballSpeedX = 2;
+      ballSpeedY = 2;
+      speedIncrease = false;
+      sizeIncrease = false;
+    }
+
+    moveBall();
+  </script>
+</body>
+</html>
